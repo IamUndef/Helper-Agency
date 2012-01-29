@@ -2,7 +2,8 @@ program HelperAgency;
 
 uses
   Vcl.Forms,
-  uMainForm in 'uMainForm.pas' {Form1};
+  uMainForm in 'uMainForm.pas' {Form1},
+  uHandlerAds in 'uHandlerAds.pas';
 
 {$R *.res}
 
