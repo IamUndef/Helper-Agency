@@ -30,7 +30,8 @@ type
     private
       Ads_: TList<TAd>;
 
-      procedure DetectTelephones( Ad: TAd );
+      procedure Clear( IsDestroy: Boolean = false );
+
       function GetAd( Index: Integer ): TAd;
       function GetAdsCount(): Integer;
     public
@@ -55,15 +56,8 @@ begin
 end;
 
 destructor THandlerAds.Destroy();
-var
-  AdIndex: Integer;
 begin
-  if Assigned( Ads_ ) then
-  begin
-    for AdIndex := 0 to Ads_.Count - 1 do
-      Ads_[AdIndex].Free();
-    Ads_.Free();
-  end;
+  Clear( true );
   inherited;
 end;
 
@@ -75,9 +69,13 @@ var
   RowIndex,
   RowCount,
   ColIndex,
-  ColCount: Integer;
+  ColCount,
+  MatchIndex: Integer;
+  Ad: TAd;
 begin
   Result := false;
+  Ad := NIL;
+  Clear();
   try
     try
       WordApp := CreateOleObject( 'Word.Application' );
@@ -89,12 +87,17 @@ begin
         for RowIndex := 1 to RowCount do
           for ColIndex := 1 to ColCount do
           begin
-            Ads_.Add( TAd.Create() );
-            Ads_.Last().Text_ := WordDoc.Tables.Item( TableIndex ).Cell(
-              RowIndex, ColIndex ).Range.FormattedText;
-            Ads_.Last().Text_ := TRegEx.Replace( Ads_.Last().Text_, #$d#$7, '',
-              [ roIgnoreCase, roMultiLine ] );
-            DetectTelephones( Ads_.Last() );
+            Ad := TAd.Create();
+            Ad.Text_ := WordDoc.Tables.Item( TableIndex ).Cell( RowIndex,
+              ColIndex ).Range.FormattedText;
+            Ad.Text_ := Trim( TRegEx.Replace( Ad.Text_, #$d#$7, sLineBreak,
+              [roIgnoreCase, roMultiLine] ) );
+            with TRegEx.Matches( Ad.Text_, TELEPHONE_PATTERN,
+                [roIgnoreCase, roMultiLine] ) do
+              for MatchIndex := 0 to Count - 1 do
+                Ad.Telephones_.Add( Item[MatchIndex].Value );
+            Ads_.Add( Ad );
+            Ad := NIL;
           end;
       end;
       Result := true;
@@ -109,6 +112,8 @@ begin
       raise;
     end;
   finally
+    if Assigned( Ad ) then
+      Ad.Free();
     WordDoc := Unassigned();
     if not VarIsClear( WordApp ) then
       WordApp.Quit();
@@ -116,16 +121,19 @@ begin
   end;
 end;
 
-procedure THandlerAds.DetectTelephones( Ad: TAd );
+procedure THandlerAds.Clear( IsDestroy: Boolean );
 var
-  Matchs: TMatchCollection;
-  MatchIndex: Integer;
+  AdIndex: Integer;
 begin
-  Ad.Telephones_.Clear();
-  Matchs := TRegEx.Matches( Ad.Text_, TELEPHONE_PATTERN,
-    [roIgnoreCase, roMultiLine] );
-  for MatchIndex := 0 to Matchs.Count - 1 do
-    Ad.Telephones_.Add( Matchs.Item[MatchIndex].Value );
+  if Assigned( Ads_ ) then
+  begin
+    for AdIndex := 0 to Ads_.Count - 1 do
+      Ads_[AdIndex].Free();
+    if not IsDestroy then
+      Ads_.Clear()
+    else
+      Ads_.Free()
+  end;
 end;
 
 function THandlerAds.GetAd( Index: Integer ): TAd;
