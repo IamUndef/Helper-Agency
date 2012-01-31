@@ -13,15 +13,14 @@ type
             Text_: String;
             Telephones_: TStringList;
 
-            function GetTelephones( Index : Integer ): String;
+            function GetTelephone( Index : Integer ): String;
             function GetTelephonesCount(): Integer;
-
           public
             constructor Create();
             destructor Destroy(); override;
 
             property Text: String read Text_;
-            property Telephones[ Index: Integer ]: String read GetTelephones;
+            property Telephones[ Index: Integer ]: String read GetTelephone;
             property TelephonesCount: Integer read GetTelephonesCount;
         end;
     private
@@ -29,14 +28,19 @@ type
         TELEPHONE_PATTERN : String =
           '(?:(?:8|\+\d{1,4})[\- ]?)?(?:\([\d]{3,6}\)[\- ]?)?(?:[\d]{1,})(?:[\- ]?[\d]{2,}){2,}';
     private
-      Ads: TList<TAd>;
+      Ads_: TList<TAd>;
 
       procedure DetectTelephones( Ad: TAd );
+      function GetAd( Index: Integer ): TAd;
+      function GetAdsCount(): Integer;
     public
       constructor Create();
       destructor Destroy(); override;
 
       function Load( const FileName: String ): Boolean;
+
+      property Ads[ Index: Integer ]: TAd read GetAd;
+      property AdsCount: Integer read GetAdsCount;
   end;
 
 implementation
@@ -47,18 +51,18 @@ uses  System.Variants, System.Win.ComObj, Vcl.Dialogs, System.SysUtils,
 constructor THandlerAds.Create();
 begin
   inherited Create();
-  Ads := TList<TAd>.Create();
+  Ads_ := TList<TAd>.Create();
 end;
 
 destructor THandlerAds.Destroy();
 var
   AdIndex: Integer;
 begin
-  if Assigned( Ads ) then
+  if Assigned( Ads_ ) then
   begin
-    for AdIndex := 0 to Ads.Count - 1 do
-      Ads[AdIndex].Free();
-    Ads.Free();
+    for AdIndex := 0 to Ads_.Count - 1 do
+      Ads_[AdIndex].Free();
+    Ads_.Free();
   end;
   inherited;
 end;
@@ -85,12 +89,12 @@ begin
         for RowIndex := 1 to RowCount do
           for ColIndex := 1 to ColCount do
           begin
-            Ads.Add( TAd.Create() );
-            Ads.Last().Text_ := WordDoc.Tables.Item( TableIndex ).Cell(
+            Ads_.Add( TAd.Create() );
+            Ads_.Last().Text_ := WordDoc.Tables.Item( TableIndex ).Cell(
               RowIndex, ColIndex ).Range.FormattedText;
-            Ads.Last().Text_ := TRegEx.Replace( Ads.Last().Text_, #$d#$7, '',
+            Ads_.Last().Text_ := TRegEx.Replace( Ads_.Last().Text_, #$d#$7, '',
               [ roIgnoreCase, roMultiLine ] );
-            DetectTelephones( Ads.Last() );
+            DetectTelephones( Ads_.Last() );
           end;
       end;
       Result := true;
@@ -124,6 +128,19 @@ begin
     Ad.Telephones_.Add( Matchs.Item[MatchIndex].Value );
 end;
 
+function THandlerAds.GetAd( Index: Integer ): TAd;
+begin
+  Result := NIL;
+  Assert( ( Index >= 0 ) and ( Index < Ads_.Count ) );
+  if ( ( Index >= 0 ) and ( Index < Ads_.Count ) ) then
+    Result := Ads_[Index]
+end;
+
+function THandlerAds.GetAdsCount(): Integer;
+begin
+  Result := Ads_.Count;
+end;
+
 constructor THandlerAds.TAd.Create();
 begin
   inherited Create();
@@ -137,11 +154,12 @@ begin
   inherited;
 end;
 
-function THandlerAds.TAd.GetTelephones( Index: Integer ): String;
+function THandlerAds.TAd.GetTelephone( Index: Integer ): String;
 begin
   Result := '';
+  Assert( ( Index >= 0 ) and ( Index < Telephones_.Count ) );
   if ( ( Index >= 0 ) and ( Index < Telephones_.Count ) ) then
-    Result := Telephones_[Index];
+    Result := Telephones_[Index]
 end;
 
 function THandlerAds.TAd.GetTelephonesCount(): Integer;
