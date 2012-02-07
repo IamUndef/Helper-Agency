@@ -31,7 +31,7 @@ begin
   Test := NIL;
   try
     Test := THandlerAds.Create();
-    Test.Load( 'c:\temp\doc1.docx' );
+    Test.Load( 'c:\temp\test.docx', NIL );
   finally
     if Assigned( Test ) then
       Test.Free();
