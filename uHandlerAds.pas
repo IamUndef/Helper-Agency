@@ -8,8 +8,9 @@ type
   THandlerAds = class( TObject )
     public
       type
-        TItsTelephonesAgenciesFunc =
-          reference to function( Telephones: TStringList ): Boolean;
+        TAdKind = ( akNone, akOwner, akAgency );
+        TCheckTelephonesFunc =
+          reference to function( Telephones: TStringList ): TAdKind;
         TAd = class
           private
             const
@@ -21,28 +22,29 @@ type
                 '(?:(?:8|\+\d{1,4})\-?\s*)?(?:\(?\d{3,6}\)?\-?\s*)?(?:\d{1,})(?:\-?\s*\d{2,}){2,}';
           private
             Text_: String;
-            IsAgency_: Boolean;
+            Kind_: TAdKind;
             Street_: String;
             RoomsCount_: Integer;
             Telephones_: TStringList;
 
             procedure Init( const AdText: String );
 
-            function GetTelephone( Index : Integer ): String;
-//          function SetTelephone();
+            function GetTelephone( Index: Integer ): String;
+            procedure SetTelephone( Index: Integer; const Telephone: String );
             function GetTelephonesCount(): Integer;
           public
             constructor Create( const AdText: String );
             destructor Destroy(); override;
 
-//            function AddTelephone();
-//            procedure DelTelephone();
+            procedure AddTelephone( const Telephone: String );
+            procedure DelTelephone( Index: Integer );
 
             property Text: String read Text_;
-            property IsAgency: Boolean read IsAgency_ write IsAgency_;
+            property Kind: TAdKind read Kind_ write Kind_;
             property Street: String read Street_ write Street_;
             property RoomsCount: Integer read RoomsCount_ write RoomsCount_;
-            property Telephones[ Index: Integer ]: String read GetTelephone;
+            property Telephones[ Index: Integer ]: String read GetTelephone
+              write SetTelephone;
             property TelephonesCount: Integer read GetTelephonesCount;
         end;
     private
@@ -57,8 +59,8 @@ type
       destructor Destroy(); override;
 
       function Load( const FileName: String;
-        ItsTelephonesAgenciesFunc: TItsTelephonesAgenciesFunc ): Boolean;
-//    procedure DelAd();
+        CheckTelephonesFunc: TCheckTelephonesFunc ): Boolean;
+      procedure DeleteAd( var Ad: TAd );
 
       property Ads[ Index: Integer ]: TAd read GetAd;
       property AdsCount: Integer read GetAdsCount;
@@ -82,7 +84,7 @@ begin
 end;
 
 function THandlerAds.Load( const FileName: String;
-  ItsTelephonesAgenciesFunc: TItsTelephonesAgenciesFunc ): Boolean;
+  CheckTelephonesFunc: TCheckTelephonesFunc ): Boolean;
 var
   WordApp,
   WordDoc: Variant;
@@ -108,12 +110,12 @@ begin
           begin
             AdText := WordDoc.Tables.Item( TableIndex ).Cell( RowIndex,
               ColIndex ).Range.FormattedText;
-            AdText := Trim( TRegEx.Replace( AdText, #$d#$7, sLineBreak,
-              [roIgnoreCase, roMultiLine] ) );
+            AdText := AnsiUpperCase( Trim( TRegEx.Replace( AdText, #$d#$7,
+              sLineBreak, [roIgnoreCase, roMultiLine] ) ) );
             Ads_.Add( TAd.Create( AdText ) );
-            if Assigned( ItsTelephonesAgenciesFunc ) then
-              Ads_.Last().IsAgency_ := ItsTelephonesAgenciesFunc(
-                Ads_.Last().Telephones_ );
+            if Assigned( CheckTelephonesFunc ) then
+              Ads_.Last().Kind_ :=
+                CheckTelephonesFunc( Ads_.Last().Telephones_ );
           end;
       end;
       Result := true;
@@ -133,6 +135,12 @@ begin
       WordApp.Quit();
     WordApp := Unassigned();
   end;
+end;
+
+procedure THandlerAds.DeleteAd( var Ad: TAd );
+begin
+  if ( Ads_.Remove( Ad ) <> -1 ) then
+    FreeAndNil( Ad );
 end;
 
 procedure THandlerAds.Clear( IsDestroy: Boolean );
@@ -176,12 +184,25 @@ begin
   inherited;
 end;
 
+procedure THandlerAds.TAd.AddTelephone( const Telephone: String );
+begin
+  if ( Telephones_.IndexOf( Trim( Telephone ) ) = -1 ) then
+    Telephones_.Add( Trim( Telephone ) );
+end;
+
+procedure THandlerAds.TAd.DelTelephone( Index: Integer );
+begin
+  Assert( ( Index >= 0 ) and ( Index < Telephones_.Count ) );
+  if ( ( Index >= 0 ) and ( Index < Telephones_.Count ) ) then
+    Telephones_.Delete( Index );
+end;
+
 procedure THandlerAds.TAd.Init( const AdText: String );
 
 procedure InitStreet();
 begin
-  Street_ := TRegEx.Match( AdText, STREET_PATTERN,
-    [roIgnoreCase, roMultiLine] ).Value;
+  Street_ := AnsiUpperCase( Trim( TRegEx.Match( AdText, STREET_PATTERN,
+    [roIgnoreCase, roMultiLine] ).Value ) );
 end;
 
 procedure InitRoomsCount();
@@ -198,10 +219,10 @@ var
   Index: Integer;
 begin
   Result := '';
-  if ( Trim( Telephone ) <> '' ) then
+  if ( Telephone <> '' ) then
   begin
     if ( Telephone[1] = '+' ) then
-      Result[1] := '+';
+      Result := '+';
     for Index := 1 to Length( Telephone ) do
       if IsDigit( Telephone[Index] ) then
         Result := Result + Telephone[Index];
@@ -216,7 +237,7 @@ begin
   with TRegEx.Matches( Text_, TELEPHONE_PATTERN,
       [roIgnoreCase, roMultiLine] ) do
     for MatchIndex := 0 to Count - 1 do
-      Telephones_.Add( LeaveOnlyDitits( Item[MatchIndex].Value ) );
+      Telephones_.Add( LeaveOnlyDitits( Trim( Item[MatchIndex].Value ) ) );
 end;
 
 begin
@@ -232,6 +253,14 @@ begin
   Assert( ( Index >= 0 ) and ( Index < Telephones_.Count ) );
   if ( ( Index >= 0 ) and ( Index < Telephones_.Count ) ) then
     Result := Telephones_[Index]
+end;
+
+procedure THandlerAds.TAd.SetTelephone( Index: Integer;
+  const Telephone: String );
+begin
+  Assert( ( Index >= 0 ) and ( Index < Telephones_.Count ) );
+  if ( ( Index >= 0 ) and ( Index < Telephones_.Count ) ) then
+    Telephones_[Index] := Trim( Telephone );
 end;
 
 function THandlerAds.TAd.GetTelephonesCount(): Integer;
