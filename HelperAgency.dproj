@@ -89,6 +89,9 @@
 			<DCCReference Include="uInputForm.pas">
 				<Form>InputForm</Form>
 			</DCCReference>
+			<DCCReference Include="uEditForm.pas">
+				<Form>EditForm</Form>
+			</DCCReference>
 			<DCCReference Include="uHandlerAds.pas"/>
 			<BuildConfiguration Include="Release">
 				<Key>Cfg_2</Key>

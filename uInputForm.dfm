@@ -116,6 +116,7 @@ object InputForm: TInputForm
       OnGetText = vstAdsListGetText
       OnHeaderClick = vstAdsListHeaderClick
       OnHeaderDblClick = vstAdsListHeaderDblClick
+      OnNodeDblClick = vstAdsListNodeDblClick
       Columns = <
         item
           Alignment = taCenter

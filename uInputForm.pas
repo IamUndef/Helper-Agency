@@ -44,6 +44,8 @@ type
     procedure vstAdsListBeforeCellPaint(Sender: TBaseVirtualTree;
       TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex;
       CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
+    procedure vstAdsListNodeDblClick(Sender: TBaseVirtualTree;
+      const HitInfo: THitInfo);
   private
     type
       TColumnType = ( ctRoomsCount = 1, ctStreet, ctTelephones, ctAdText );
@@ -58,6 +60,8 @@ type
 implementation
 
 {$R *.dfm}
+
+uses uEditForm;
 
 procedure TInputForm.FormCreate(Sender: TObject);
 begin
@@ -237,6 +241,22 @@ begin
   end else
   if ( vstAdsList.Selected[Node] ) then
     vstAdsList.SelectionBlendFactor := 255;
+end;
+
+procedure TInputForm.vstAdsListNodeDblClick(Sender: TBaseVirtualTree;
+  const HitInfo: THitInfo);
+var
+  EditForm: TEditForm;
+begin
+  if ( HitInfo.HitColumn <> 0 ) then
+  begin
+    EditForm := TEditForm.Create( NIL );
+    try
+      EditForm.ShowModal();
+    finally
+      EditForm.Free();
+    end;
+  end;
 end;
 
 function TInputForm.ShowModal( const FileName: String ): TModalResult;
