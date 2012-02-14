@@ -2,7 +2,8 @@ program HelperAgency;
 
 uses
   Vcl.Forms,
-  uMainForm in 'uMainForm.pas' {Form1},
+  uMainForm in 'uMainForm.pas' {MainForm},
+  uInputForm in 'uInputForm.pas' {InputForm},
   uHandlerAds in 'uHandlerAds.pas';
 
 {$R *.res}
@@ -10,6 +11,6 @@ uses
 begin
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
-  Application.CreateForm(TForm1, Form1);
+  Application.CreateForm(TMainForm, MainForm);
   Application.Run;
 end.

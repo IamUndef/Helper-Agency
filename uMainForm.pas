@@ -7,7 +7,7 @@ uses
   System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs;
 
 type
-  TForm1 = class( TForm )
+  TMainForm = class( TForm )
     procedure FormCreate( Sender: TObject );
   private
     { Private declarations }
@@ -16,25 +16,23 @@ type
   end;
 
 var
-  Form1: TForm1;
+  MainForm: TMainForm;
 
 implementation
 
 {$R *.dfm}
 
-uses uHandlerAds;
+uses uInputForm;
 
-procedure TForm1.FormCreate( Sender: TObject );
+procedure TMainForm.FormCreate( Sender: TObject );
 var
-  Test: THandlerAds;
+  InputForm: TInputForm;
 begin
-  Test := NIL;
+  InputForm := TInputForm.Create( NIL );
   try
-    Test := THandlerAds.Create();
-    Test.Load( 'c:\temp\test.docx', NIL );
+    InputForm.ShowModal( 'C:\Temp\Doc1.docx' );
   finally
-    if Assigned( Test ) then
-      Test.Free();
+    InputForm.Free();
   end;
 end;
 
