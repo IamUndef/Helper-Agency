@@ -92,6 +92,10 @@
 			<DCCReference Include="uEditForm.pas">
 				<Form>EditForm</Form>
 			</DCCReference>
+			<DCCReference Include="uMainDM.pas">
+				<Form>MainDM</Form>
+				<DesignClass>TDataModule</DesignClass>
+			</DCCReference>
 			<DCCReference Include="uHandlerAds.pas"/>
 			<BuildConfiguration Include="Release">
 				<Key>Cfg_2</Key>

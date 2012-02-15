@@ -62,7 +62,7 @@ implementation
 
 {$R *.dfm}
 
-uses uEditForm;
+uses uMainDM, uEditForm;
 
 procedure TInputForm.FormCreate(Sender: TObject);
 begin
@@ -281,8 +281,31 @@ end;
 function TInputForm.ShowModal( const FileName: String ): TModalResult;
 var
   AdIndex: Integer;
+
+function CheckTelephones() : THandlerAds.TCheckTelephonesFunc;
 begin
-  if not HandlerAds.Load( FileName, NIL ) then
+  Result := function ( Telephones: TStringList ): THandlerAds.TAdKind
+  var
+    TelephoneIndex: Integer;
+  begin
+    Result := akNone;
+    for TelephoneIndex := 0 to Telephones.Count - 1 do
+      try
+        MainDM.ibCheckTelephonesSQL.ParamByName( 'TELEPHONE' ).AsString :=
+          Telephones[TelephoneIndex];
+        MainDM.ibCheckTelephonesSQL.Close();
+        MainDM.ibCheckTelephonesSQL.ExecQuery();
+        if not MainDM.ibCheckTelephonesSQL.Eof then
+          Exit( THandlerAds.TAdKind(
+            MainDM.ibCheckTelephonesSQL.FieldByName( 'KIND' ).AsInteger ) )
+      finally
+        MainDM.ibCheckTelephonesSQL.Close();
+      end;
+  end;
+end;
+
+begin
+  if not HandlerAds.Load( FileName, CheckTelephones() ) then
   begin
     Result := mrCancel;
     ModalResult := mrCancel;

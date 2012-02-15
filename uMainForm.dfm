@@ -15,4 +15,13 @@ object MainForm: TMainForm
   OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
+  object bTest: TButton
+    Left = 8
+    Top = 8
+    Width = 75
+    Height = 25
+    Caption = 'bTest'
+    TabOrder = 0
+    OnClick = bTestClick
+  end
 end
