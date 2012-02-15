@@ -46,6 +46,7 @@ type
       CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
     procedure vstAdsListNodeDblClick(Sender: TBaseVirtualTree;
       const HitInfo: THitInfo);
+    procedure vstAdsListKeyPress(Sender: TObject; var Key: Char);
   private
     type
       TColumnType = ( ctRoomsCount = 1, ctStreet, ctTelephones, ctAdText );
@@ -100,9 +101,9 @@ begin
   NodeEmularator := vstAdsList.CheckedNodes().GetEnumerator();
   while NodeEmularator.MoveNext() do
   begin
+    vstAdsList.CheckState[NodeEmularator.Current] := csUncheckedNormal;
     THandlerAds.TAd( vstAdsList.GetNodeData(
       NodeEmularator.Current )^ ).Kind := akOwner;
-    vstAdsList.CheckState[NodeEmularator.Current] := csUncheckedNormal;
   end;
   vstAdsList.Invalidate();
 end;
@@ -114,9 +115,9 @@ begin
   NodeEmularator := vstAdsList.CheckedNodes().GetEnumerator();
   while NodeEmularator.MoveNext() do
   begin
+    vstAdsList.CheckState[NodeEmularator.Current] := csUncheckedNormal;
     THandlerAds.TAd( vstAdsList.GetNodeData(
       NodeEmularator.Current )^ ).Kind := akAgency;
-    vstAdsList.CheckState[NodeEmularator.Current] := csUncheckedNormal;
   end;
   vstAdsList.Invalidate();
 end;
@@ -132,6 +133,7 @@ begin
     NodeEmularator := vstAdsList.CheckedNodes().GetEnumerator();
     while NodeEmularator.MoveNext() do
     begin
+      vstAdsList.CheckState[NodeEmularator.Current] := csUncheckedNormal;
       HandlerAds.DeleteAd( THandlerAds.TAd( vstAdsList.GetNodeData(
         NodeEmularator.Current )^ ) );
       vstAdsList.DeleteNode( NodeEmularator.Current );
@@ -246,15 +248,32 @@ end;
 procedure TInputForm.vstAdsListNodeDblClick(Sender: TBaseVirtualTree;
   const HitInfo: THitInfo);
 var
-  EditForm: TEditForm;
+  Key: Char;
 begin
   if ( HitInfo.HitColumn <> 0 ) then
   begin
-    EditForm := TEditForm.Create( NIL );
-    try
-      EditForm.ShowModal();
-    finally
-      EditForm.Free();
+    Key := Char( VK_RETURN );
+    vstAdsList.OnKeyPress( vstAdsList, Key );
+  end;
+end;
+
+procedure TInputForm.vstAdsListKeyPress(Sender: TObject; var Key: Char);
+var
+  NodeEmularator: TVTVirtualNodeEnumerator;
+  EditForm: TEditForm;
+begin
+  if ( Key = Char( VK_RETURN ) ) then
+  begin
+    NodeEmularator := vstAdsList.SelectedNodes().GetEnumerator();
+    if ( NodeEmularator.MoveNext() ) then
+    begin
+      EditForm := TEditForm.Create( NIL );
+      try
+        EditForm.ShowModal( { THandlerAds.TAd( vstAdsList.GetNodeData(
+        NodeEmularator.Current )^ } );
+      finally
+        EditForm.Free();
+      end;
     end;
   end;
 end;
