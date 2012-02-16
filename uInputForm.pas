@@ -7,7 +7,7 @@ uses
   System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
   Vcl.ActnList, Vcl.ActnMan, Vcl.ExtCtrls, Vcl.ImgList, Vcl.ToolWin,
   Vcl.ActnCtrls, Vcl.StdCtrls, Vcl.StdStyleActnCtrls, VirtualTrees,
-  uHandlerAds;
+  Vcl.Buttons, uHandlerAds;
 
 type
   TInputForm = class(TForm)
@@ -24,6 +24,11 @@ type
     aAgency: TAction;
     gbMain: TGroupBox;
     vstAdsList: TVirtualStringTree;
+    pAdKinds: TPanel;
+    sbAdKindsTitle: TSpeedButton;
+    cbNone: TCheckBox;
+    cbOwner: TCheckBox;
+    cbAgency: TCheckBox;
     procedure FormCreate(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure FormDestroy(Sender: TObject);
@@ -41,12 +46,14 @@ type
     procedure vstAdsListHeaderDblClick(Sender: TVTHeader;
       HitInfo: TVTHeaderHitInfo);
     procedure vstAdsListChecked(Sender: TBaseVirtualTree; Node: PVirtualNode);
-    procedure vstAdsListBeforeCellPaint(Sender: TBaseVirtualTree;
-      TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex;
-      CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
     procedure vstAdsListNodeDblClick(Sender: TBaseVirtualTree;
       const HitInfo: THitInfo);
     procedure vstAdsListKeyPress(Sender: TObject; var Key: Char);
+    procedure vstAdsListPaintText(Sender: TBaseVirtualTree;
+      const TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex;
+      TextType: TVSTTextType);
+    procedure sbAdKindsTitleClick(Sender: TObject);
+    procedure CheckBoxClick(Sender: TObject);
   private
     type
       TColumnType = ( ctRoomsCount = 1, ctStreet, ctTelephones, ctAdText );
@@ -68,6 +75,9 @@ procedure TInputForm.FormCreate(Sender: TObject);
 begin
   vstAdsList.NodeDataSize := SizeOf( THandlerAds.TAd );
   HandlerAds := THandlerAds.Create();
+  pAdKinds.Tag := pAdKinds.Height;
+  pAdKinds.Height := sbAdKindsTitle.Height;
+  sbAdKindsTitle.Caption := cbNone.Caption + cbOwner.Caption + cbAgency.Caption;
 end;
 
 procedure TInputForm.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -104,6 +114,11 @@ begin
     vstAdsList.CheckState[NodeEmularator.Current] := csUncheckedNormal;
     THandlerAds.TAd( vstAdsList.GetNodeData(
       NodeEmularator.Current )^ ).Kind := akOwner;
+    if not cbOwner.Checked then
+    begin
+      vstAdsList.FullyVisible[NodeEmularator.Current] := false;
+      vstAdsList.Selected[NodeEmularator.Current] := false;
+    end;
   end;
   vstAdsList.Invalidate();
 end;
@@ -118,6 +133,11 @@ begin
     vstAdsList.CheckState[NodeEmularator.Current] := csUncheckedNormal;
     THandlerAds.TAd( vstAdsList.GetNodeData(
       NodeEmularator.Current )^ ).Kind := akAgency;
+    if not cbAgency.Checked then
+    begin
+      vstAdsList.FullyVisible[NodeEmularator.Current] := false;
+      vstAdsList.Selected[NodeEmularator.Current] := false;
+    end;
   end;
   vstAdsList.Invalidate();
 end;
@@ -224,27 +244,6 @@ begin
     vstAdsList.Header.Columns[0].CheckState := csMixedNormal;
 end;
 
-procedure TInputForm.vstAdsListBeforeCellPaint(Sender: TBaseVirtualTree;
-  TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex;
-  CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
-const
-  AdKindColors: array[THandlerAds.TAdKind] of TColor =
-    ( clWhite, $0023C880, $002364FA );
-var
-  Ad: THandlerAds.TAd;
-begin
-  Ad := THandlerAds.TAd( vstAdsList.GetNodeData( Node )^ );
-  if ( Assigned( Ad ) and ( Ad.Kind <> akNone ) ) then
-  begin
-    if ( vstAdsList.Selected[Node] ) then
-      vstAdsList.SelectionBlendFactor := 0;
-    TargetCanvas.Brush.Color := AdKindColors[Ad.Kind];
-    TargetCanvas.FillRect( CellRect );
-  end else
-  if ( vstAdsList.Selected[Node] ) then
-    vstAdsList.SelectionBlendFactor := 255;
-end;
-
 procedure TInputForm.vstAdsListNodeDblClick(Sender: TBaseVirtualTree;
   const HitInfo: THitInfo);
 var
@@ -259,23 +258,88 @@ end;
 
 procedure TInputForm.vstAdsListKeyPress(Sender: TObject; var Key: Char);
 var
+  Node: PVirtualNode;
   NodeEmularator: TVTVirtualNodeEnumerator;
   EditForm: TEditForm;
 begin
   if ( Key = Char( VK_RETURN ) ) then
   begin
+    Node := NIL;
     NodeEmularator := vstAdsList.SelectedNodes().GetEnumerator();
-    if ( NodeEmularator.MoveNext() ) then
+    while ( NodeEmularator.MoveNext() ) do
+      if not Assigned( Node ) then
+        Node := NodeEmularator.Current
+      else
+        vstAdsList.Selected[NodeEmularator.Current] := false;
+    EditForm := TEditForm.Create( NIL );
+    try
+      EditForm.ShowModal( {THandlerAds.TAd( vstAdsList.GetNodeData( Node )^} );
+    finally
+      EditForm.Free();
+    end;
+  end else
+  if ( Key = Char( VK_SPACE ) ) then
+  begin
+    Key := #0;
+    NodeEmularator := vstAdsList.SelectedNodes().GetEnumerator();
+    while ( NodeEmularator.MoveNext() ) do
+      if ( NodeEmularator.Current.CheckState = csUncheckedNormal ) then
+        vstAdsList.CheckState[NodeEmularator.Current] := csCheckedNormal
+      else
+        vstAdsList.CheckState[NodeEmularator.Current] := csUncheckedNormal;
+  end;
+end;
+
+procedure TInputForm.vstAdsListPaintText(Sender: TBaseVirtualTree;
+  const TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex;
+  TextType: TVSTTextType);
+const
+  AdKindColors: array[THandlerAds.TAdKind] of TColor =
+    ( clSilver, clBlack, clRed );
+var
+  Ad: THandlerAds.TAd;
+begin
+  Ad := THandlerAds.TAd( vstAdsList.GetNodeData( Node )^ );
+  if Assigned( Ad ) then
+    TargetCanvas.Font.Color := AdKindColors[Ad.Kind];
+end;
+
+procedure TInputForm.sbAdKindsTitleClick(Sender: TObject);
+begin
+  if ( pAdKinds.Height = pAdKinds.Tag ) then
+    pAdKinds.Height := sbAdKindsTitle.Height
+  else
+    pAdKinds.Height := pAdKinds.Tag;
+end;
+
+procedure TInputForm.CheckBoxClick(Sender: TObject);
+var
+  Checkbox: TCheckBox;
+  NodeEmularator: TVTVirtualNodeEnumerator;
+  Ad: THandlerAds.TAd;
+begin
+  Checkbox := TCheckBox( Sender );
+  NodeEmularator := vstAdsList.Nodes().GetEnumerator();
+  while ( NodeEmularator.MoveNext() ) do
+  begin
+    Ad := THandlerAds.TAd( vstAdsList.GetNodeData( NodeEmularator.Current )^ );
+    if ( Ad.Kind = THandlerAds.TAdKind( Checkbox.Tag ) ) then
     begin
-      EditForm := TEditForm.Create( NIL );
-      try
-        EditForm.ShowModal( { THandlerAds.TAd( vstAdsList.GetNodeData(
-        NodeEmularator.Current )^ } );
-      finally
-        EditForm.Free();
+      vstAdsList.FullyVisible[NodeEmularator.Current] := Checkbox.Checked;
+      if not Checkbox.Checked then
+      begin
+        vstAdsList.Selected[NodeEmularator.Current] := false;
+        vstAdsList.CheckState[NodeEmularator.Current] := csUncheckedNormal;
       end;
     end;
   end;
+  sbAdKindsTitle.Caption := '';
+  if cbNone.Checked then
+    sbAdKindsTitle.Caption := cbNone.Caption;
+  if cbOwner.Checked then
+    sbAdKindsTitle.Caption := sbAdKindsTitle.Caption + cbOwner.Caption;
+  if cbAgency.Checked then
+    sbAdKindsTitle.Caption := sbAdKindsTitle.Caption + cbAgency.Caption;
 end;
 
 function TInputForm.ShowModal( const FileName: String ): TModalResult;

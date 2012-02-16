@@ -77,9 +77,9 @@ object InputForm: TInputForm
   end
   object gbMain: TGroupBox
     Left = 0
-    Top = 43
+    Top = 118
     Width = 642
-    Height = 431
+    Height = 356
     Align = alClient
     Caption = #1054#1073#1098#1103#1074#1083#1077#1085#1080#1103
     DoubleBuffered = False
@@ -89,9 +89,10 @@ object InputForm: TInputForm
       Left = 2
       Top = 15
       Width = 638
-      Height = 414
+      Height = 339
       Align = alClient
       CheckImageKind = ckXP
+      DefaultNodeHeight = 22
       Header.AutoSizeIndex = -1
       Header.Font.Charset = DEFAULT_CHARSET
       Header.Font.Color = clWindowText
@@ -108,12 +109,12 @@ object InputForm: TInputForm
       ShowHint = True
       TabOrder = 0
       TreeOptions.MiscOptions = [toAcceptOLEDrop, toCheckSupport, toFullRepaintOnResize, toInitOnSave, toReportMode, toToggleOnDblClick, toWheelPanning, toEditOnClick]
-      TreeOptions.PaintOptions = [toShowButtons, toShowDropmark, toShowHorzGridLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toUseBlendedSelection]
-      TreeOptions.SelectionOptions = [toFullRowSelect]
-      OnBeforeCellPaint = vstAdsListBeforeCellPaint
+      TreeOptions.PaintOptions = [toShowButtons, toShowDropmark, toShowHorzGridLines, toShowVertGridLines, toThemeAware, toUseBlendedImages]
+      TreeOptions.SelectionOptions = [toFullRowSelect, toMultiSelect]
       OnChecked = vstAdsListChecked
       OnCompareNodes = vstAdsListCompareNodes
       OnGetText = vstAdsListGetText
+      OnPaintText = vstAdsListPaintText
       OnHeaderClick = vstAdsListHeaderClick
       OnHeaderDblClick = vstAdsListHeaderDblClick
       OnKeyPress = vstAdsListKeyPress
@@ -162,6 +163,69 @@ object InputForm: TInputForm
           Width = 234
           WideText = #1054#1073#1098#1103#1074#1083#1077#1085#1080#1077
         end>
+    end
+  end
+  object pAdKinds: TPanel
+    Left = 0
+    Top = 43
+    Width = 642
+    Height = 75
+    Align = alTop
+    BevelOuter = bvNone
+    TabOrder = 3
+    TabStop = True
+    object sbAdKindsTitle: TSpeedButton
+      AlignWithMargins = True
+      Left = 3
+      Top = 0
+      Width = 636
+      Height = 22
+      Margins.Top = 0
+      Margins.Bottom = 0
+      Align = alTop
+      Flat = True
+      OnClick = sbAdKindsTitleClick
+      ExplicitLeft = 440
+      ExplicitTop = 24
+      ExplicitWidth = 23
+    end
+    object cbNone: TCheckBox
+      Left = 9
+      Top = 24
+      Width = 120
+      Height = 17
+      TabStop = False
+      Caption = '[ '#1053#1077#1080#1079#1074#1077#1089#1090#1085#1099#1077' ]'
+      Checked = True
+      State = cbChecked
+      TabOrder = 0
+      OnClick = CheckBoxClick
+    end
+    object cbOwner: TCheckBox
+      Tag = 1
+      Left = 9
+      Top = 40
+      Width = 120
+      Height = 17
+      TabStop = False
+      Caption = '[ '#1057#1086#1073#1089#1090#1074#1077#1085#1085#1080#1082#1080' ]'
+      Checked = True
+      State = cbChecked
+      TabOrder = 1
+      OnClick = CheckBoxClick
+    end
+    object cbAgency: TCheckBox
+      Tag = 2
+      Left = 9
+      Top = 56
+      Width = 120
+      Height = 17
+      TabStop = False
+      Caption = '[ '#1040#1075#1077#1085#1089#1090#1074#1072' ]'
+      Checked = True
+      State = cbChecked
+      TabOrder = 2
+      OnClick = CheckBoxClick
     end
   end
   object amMain: TActionManager
