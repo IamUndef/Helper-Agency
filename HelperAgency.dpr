@@ -5,6 +5,7 @@ uses
   uMainForm in 'uMainForm.pas' {MainForm},
   uInputForm in 'uInputForm.pas' {InputForm},
   uEditForm in 'uEditForm.pas' {EditForm},
+  uInputTelephonesForm in 'uInputTelephonesForm.pas' {InputTelephonesForm},
   uMainDM in 'uMainDM.pas' {MainDM: TDataModule},
   uHandlerAds in 'uHandlerAds.pas';
 

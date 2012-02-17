@@ -13,6 +13,7 @@ object EditForm: TEditForm
   Font.Style = [fsBold]
   OldCreateOrder = False
   Position = poDesktopCenter
+  OnDestroy = FormDestroy
   PixelsPerInch = 96
   TextHeight = 13
   object pMain: TPanel
@@ -59,28 +60,28 @@ object EditForm: TEditForm
       Caption = #1044#1072#1085#1085#1099#1077
       TabOrder = 0
       object lRoomsCount: TLabel
-        Left = 22
+        Left = 12
         Top = 33
         Width = 117
         Height = 13
         Caption = #1050#1086#1083#1080#1095#1077#1089#1090#1074#1086' '#1082#1086#1084#1085#1072#1090':'
       end
       object lStreet: TLabel
-        Left = 22
+        Left = 12
         Top = 98
         Width = 39
         Height = 13
         Caption = #1059#1083#1080#1094#1072':'
       end
       object lTelephones: TLabel
-        Left = 183
+        Left = 193
         Top = 33
         Width = 64
         Height = 13
         Caption = #1058#1077#1083#1077#1092#1086#1085#1099':'
       end
       object psbAdd: TPngSpeedButton
-        Left = 356
+        Left = 366
         Top = 33
         Width = 23
         Height = 22
@@ -90,7 +91,7 @@ object EditForm: TEditForm
         ShowHint = True
       end
       object psbDel: TPngSpeedButton
-        Left = 356
+        Left = 366
         Top = 57
         Width = 23
         Height = 22
@@ -100,8 +101,8 @@ object EditForm: TEditForm
         ShowHint = True
       end
       object psbChange: TPngSpeedButton
-        Left = 356
-        Top = 115
+        Left = 366
+        Top = 81
         Width = 23
         Height = 22
         Action = aChange
@@ -110,7 +111,7 @@ object EditForm: TEditForm
         ShowHint = True
       end
       object editRoomsCount: TEdit
-        Left = 22
+        Left = 12
         Top = 51
         Width = 35
         Height = 21
@@ -120,42 +121,23 @@ object EditForm: TEditForm
         TabOrder = 0
       end
       object editStreet: TEdit
-        Left = 22
+        Left = 12
         Top = 116
-        Width = 150
+        Width = 170
         Height = 21
         CharCase = ecUpperCase
         MaxLength = 50
         TabOrder = 1
       end
-      object lvTelephones: TListView
-        Left = 183
+      object lbTelephones: TListBox
+        Left = 193
         Top = 51
         Width = 170
-        Height = 60
-        Columns = <
-          item
-            Width = 0
-          end
-          item
-            Alignment = taRightJustify
-            Width = 149
-          end>
-        FlatScrollBars = True
-        ReadOnly = True
-        RowSelect = True
-        ShowColumnHeaders = False
+        Height = 86
+        Style = lbOwnerDrawFixed
         TabOrder = 2
-        ViewStyle = vsReport
-      end
-      object editTelephone: TEdit
-        Left = 183
-        Top = 116
-        Width = 170
-        Height = 21
-        MaxLength = 20
-        NumbersOnly = True
-        TabOrder = 3
+        OnDrawItem = lbTelephonesDrawItem
+        OnKeyPress = lbTelephonesKeyPress
       end
     end
   end
@@ -782,6 +764,7 @@ object EditForm: TEditForm
     object aAdd: TAction
       Hint = #1044#1086#1073#1072#1074#1080#1090#1100
       ImageIndex = 0
+      ShortCut = 45
       OnExecute = aAddExecute
     end
     object aDel: TAction

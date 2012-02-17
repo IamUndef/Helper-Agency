@@ -3,13 +3,16 @@ unit uMainDM;
 interface
 
 uses
-  System.SysUtils, System.Classes, IBDatabase, Data.DB, IBSQL;
+  System.SysUtils, System.Classes, IBDatabase, Data.DB, IBSQL, IBCustomDataSet,
+  IBQuery;
 
 type
   TMainDM = class(TDataModule)
     ibDatabase: TIBDatabase;
     ibTransaction: TIBTransaction;
     ibCheckTelephonesSQL: TIBSQL;
+    ibTelephonesQ: TIBQuery;
+    dsTelephones: TDataSource;
   private
     { Private declarations }
   public

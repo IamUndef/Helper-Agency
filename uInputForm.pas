@@ -84,7 +84,7 @@ procedure TInputForm.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
   if ( ( ModalResult <> mrOk ) and ( IDNO = MessageBox( Handle,
       'Вы действительно хотите выйти без сохранения?', 'Helper Agency',
-      MB_ICONQUESTION or MB_YESNO ) ) ) then
+      MB_ICONQUESTION or MB_YESNO or MB_DEFBUTTON2 ) ) ) then
     ModalResult := mrNone;
 end;
 
@@ -148,7 +148,7 @@ var
 begin
   if ( ( vstAdsList.CheckedCount <> 0 ) and ( IDYES = MessageBox( Handle,
       'Вы действительно хотите удалить выбранные объявления?', 'Helper Agency',
-      MB_ICONWARNING or MB_YESNO ) ) ) then
+      MB_ICONWARNING or MB_YESNO or MB_DEFBUTTON2 ) ) ) then
   begin
     NodeEmularator := vstAdsList.CheckedNodes().GetEnumerator();
     while NodeEmularator.MoveNext() do

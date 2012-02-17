@@ -27,6 +27,31 @@ object MainDM: TMainDM
       'WHERE TELEPHONES.TELEPHONE = TRIM( :TELEPHONE )')
     Transaction = ibTransaction
     Left = 120
+    Top = 8
+  end
+  object ibTelephonesQ: TIBQuery
+    Database = ibDatabase
+    Transaction = ibTransaction
+    SQL.Strings = (
+      'SELECT'
+      '  TELEPHONES.TELEPHONES_ID,'
+      '  TELEPHONES.KIND,'
+      '  TELEPHONES.TELEPHONE'
+      'FROM TELEPHONES'
+      'WHERE TELEPHONES.TELEPHONE STARTING WITH TRIM( :TELEPHONE )'
+      'ORDER BY TELEPHONES.TELEPHONE')
+    Left = 216
+    Top = 8
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'TELEPHONE'
+        ParamType = ptUnknown
+      end>
+  end
+  object dsTelephones: TDataSource
+    DataSet = ibTelephonesQ
+    Left = 216
     Top = 56
   end
 end

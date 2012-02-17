@@ -92,6 +92,9 @@
 			<DCCReference Include="uEditForm.pas">
 				<Form>EditForm</Form>
 			</DCCReference>
+			<DCCReference Include="uInputTelephonesForm.pas">
+				<Form>InputTelephonesForm</Form>
+			</DCCReference>
 			<DCCReference Include="uMainDM.pas">
 				<Form>MainDM</Form>
 				<DesignClass>TDataModule</DesignClass>
