@@ -84,14 +84,15 @@ begin
     Telephone_ := editTelephone.Text;
     ModalResult := mrOk
   end else
-  if ( editTelephone.SelStart = 0 ) then
+  if ( ( editTelephone.SelStart = 0 ) and ( Key <> Char( VK_BACK ) ) ) then
   begin
     if ( ( Key = '+' ) and ( ( editTelephone.Text = '' ) or
         ( editTelephone.Text[1] <> '+' ) ) ) then
     begin
       Key := #0;
       editTelephone.Text := '+' + editTelephone.Text;
-      editTelephone.SelStart := 1;
+      if MainDM.ibTelephonesQ.IsEmpty() then
+        editTelephone.SelStart := 1;
     end else
     if ( ( editTelephone.Text <> '' ) and ( editTelephone.Text[1] = '+' ) ) then
       Key := #0;
@@ -141,12 +142,25 @@ procedure TInputTelephonesForm.dbgTelephonesDrawColumnCell(Sender: TObject;
 const
   AdKindColors: array[THandlerAds.TAdKind] of TColor =
     ( clSilver, clBlack, clRed );
+  LEFT_OFFSET = 3;
+var
+  CellText: String;
+  CellRect: TRect;
 begin
   dbgTelephones.Canvas.Font.Color := AdKindColors[THandlerAds.TAdKind(
     MainDM.ibTelephonesQ.FieldByName( 'KIND' ).AsInteger )];
-  if ( gdSelected in State ) then
-    dbgTelephones.Canvas.Brush.Color := clHighlight;
-  dbgTelephones.DefaultDrawColumnCell( Rect, DataCol, Column, State );
+  if ( ( gdSelected in State ) and  dbgTelephones.Focused )then
+    dbgTelephones.Canvas.Brush.Color := clHighlight
+  else
+    dbgTelephones.Canvas.Brush.Color := clWhite;
+  dbgTelephones.Canvas.FillRect( Rect );
+  CellText := MainDM.ibTelephonesQ.FieldByName( 'TELEPHONE' ).AsString;
+  CellRect := Rect;
+  CellRect.Left := CellRect.Left + LEFT_OFFSET;
+  if ( MainDM.ibTelephonesQ.RecordCount > 1 ) then
+    CellRect.Right := CellRect.Right - GetSystemMetrics( SM_CXVSCROLL );
+  DrawText( dbgTelephones.Canvas.Handle, CellText, Length( CellText ), CellRect,
+    DT_END_ELLIPSIS or DT_SINGLELINE or DT_VCENTER );
 end;
 
 function TInputTelephonesForm.ShowModal( Telephone: String ): TModalResult;

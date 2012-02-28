@@ -41,6 +41,7 @@ object InputStreetsForm: TInputStreetsForm
     Height = 183
     Align = alClient
     DataSource = MainDM.dsStreets
+    DefaultDrawing = False
     Options = [dgTitles, dgIndicator, dgColLines, dgRowLines, dgTabs, dgRowSelect, dgConfirmDelete, dgCancelOnExit, dgTitleClick, dgTitleHotTrack]
     ReadOnly = True
     TabOrder = 1
@@ -49,6 +50,7 @@ object InputStreetsForm: TInputStreetsForm
     TitleFont.Height = -11
     TitleFont.Name = 'Tahoma'
     TitleFont.Style = [fsBold]
+    OnDrawColumnCell = dbgStreetsDrawColumnCell
     OnDblClick = dbgStreetsDblClick
     OnKeyPress = dbgStreetsKeyPress
     Columns = <

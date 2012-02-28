@@ -42,12 +42,13 @@ type
     procedure aAddExecute(Sender: TObject);
     procedure aDelExecute(Sender: TObject);
     procedure aChangeExecute(Sender: TObject);
-    procedure lbTelephonesDrawItem(Control: TWinControl; Index: Integer;
-      Rect: TRect; State: TOwnerDrawState);
-    procedure lbTelephonesKeyPress(Sender: TObject; var Key: Char);
     procedure editStreetEnter(Sender: TObject);
     procedure editStreetExit(Sender: TObject);
     procedure editStreetKeyPress(Sender: TObject; var Key: Char);
+    procedure lbTelephonesDblClick(Sender: TObject);
+    procedure lbTelephonesKeyPress(Sender: TObject; var Key: Char);
+    procedure lbTelephonesDrawItem(Control: TWinControl; Index: Integer;
+      Rect: TRect; State: TOwnerDrawState);
   private
     { Private declarations }
     InputStreetsForm: TInputStreetsForm;
@@ -139,19 +140,24 @@ begin
   end;
 end;
 
-procedure TEditForm.lbTelephonesDrawItem(Control: TWinControl; Index: Integer;
-  Rect: TRect; State: TOwnerDrawState);
+procedure TEditForm.lbTelephonesDblClick(Sender: TObject);
 begin
-  lbTelephones.Canvas.FillRect( Rect );
-  DrawTextW( lbTelephones.Canvas.Handle, lbTelephones.Items[Index],
-    Length( lbTelephones.Items[Index] ), Rect, DT_END_ELLIPSIS or DT_RIGHT or
-    DT_SINGLELINE or DT_VCENTER );
+  aChange.Execute();
 end;
 
 procedure TEditForm.lbTelephonesKeyPress(Sender: TObject; var Key: Char);
 begin
   if ( Key = Char( VK_RETURN ) ) then
     aChange.Execute();
+end;
+
+procedure TEditForm.lbTelephonesDrawItem(Control: TWinControl; Index: Integer;
+  Rect: TRect; State: TOwnerDrawState);
+begin
+  lbTelephones.Canvas.FillRect( Rect );
+  DrawText( lbTelephones.Canvas.Handle, lbTelephones.Items[Index],
+    Length( lbTelephones.Items[Index] ), Rect, DT_END_ELLIPSIS or DT_RIGHT or
+    DT_SINGLELINE or DT_VCENTER );
 end;
 
 end.

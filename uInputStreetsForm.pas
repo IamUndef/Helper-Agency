@@ -18,6 +18,8 @@ type
     procedure editStreetKeyPress(Sender: TObject; var Key: Char);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FormKeyPress(Sender: TObject; var Key: Char);
+    procedure dbgStreetsDrawColumnCell(Sender: TObject; const Rect: TRect;
+      DataCol: Integer; Column: TColumn; State: TGridDrawState);
   private
     type
       TInputStages = ( isNormal, isGridOnly, isNothing );
@@ -113,6 +115,28 @@ begin
     if ( Key = VK_DELETE ) then
       InputStage := isGridOnly;
   end;
+end;
+
+procedure TInputStreetsForm.dbgStreetsDrawColumnCell(Sender: TObject;
+  const Rect: TRect; DataCol: Integer; Column: TColumn; State: TGridDrawState);
+const
+  LEFT_OFFSET = 3;
+var
+  CellText: String;
+  CellRect: TRect;
+begin
+  if ( ( gdSelected in State ) and  dbgStreets.Focused )then
+    dbgStreets.Canvas.Brush.Color := clHighlight
+  else
+    dbgStreets.Canvas.Brush.Color := clWhite;
+  dbgStreets.Canvas.FillRect( Rect );
+  CellText := MainDM.ibStreetsQ.FieldByName( 'STREET' ).AsString;
+  CellRect := Rect;
+  CellRect.Left := CellRect.Left + LEFT_OFFSET;
+  if ( MainDM.ibStreetsQ.RecordCount > 1 ) then
+    CellRect.Right := CellRect.Right - GetSystemMetrics( SM_CXVSCROLL );
+  DrawText( dbgStreets.Canvas.Handle, CellText, Length( CellText ), CellRect,
+    DT_END_ELLIPSIS or DT_SINGLELINE or DT_VCENTER );
 end;
 
 procedure TInputStreetsForm.FormKeyPress(Sender: TObject; var Key: Char);

@@ -139,6 +139,7 @@ object EditForm: TEditForm
         Height = 86
         Style = lbOwnerDrawFixed
         TabOrder = 2
+        OnDblClick = lbTelephonesDblClick
         OnDrawItem = lbTelephonesDrawItem
         OnKeyPress = lbTelephonesKeyPress
       end
