@@ -15,6 +15,7 @@ object InputTelephonesForm: TInputTelephonesForm
   OldCreateOrder = False
   Position = poMainFormCenter
   OnClose = FormClose
+  OnKeyDown = FormKeyDown
   OnKeyPress = FormKeyPress
   PixelsPerInch = 96
   TextHeight = 13

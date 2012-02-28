@@ -16,11 +16,16 @@ type
     procedure dbgTelephonesDblClick(Sender: TObject);
     procedure dbgTelephonesKeyPress(Sender: TObject; var Key: Char);
     procedure editTelephoneKeyPress(Sender: TObject; var Key: Char);
+    procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FormKeyPress(Sender: TObject; var Key: Char);
     procedure dbgTelephonesDrawColumnCell(Sender: TObject; const Rect: TRect;
       DataCol: Integer; Column: TColumn; State: TGridDrawState);
   private
+    type
+      TInputStages = ( isNormal, isGridOnly, isNothing );
+  private
     { Private declarations }
+    InputStage: TInputStages;
     Telephone_: String;
   public
     { Public declarations }
@@ -45,14 +50,29 @@ begin
 end;
 
 procedure TInputTelephonesForm.editTelephoneChange(Sender: TObject);
+var
+  TextLength: Integer;
 begin
-  MainDM.ibTelephonesQ.Close();
-  if ( editTelephone.Text <> '' ) then
-    MainDM.ibTelephonesQ.ParamByName( 'TELEPHONE' ).AsString :=
-      editTelephone.Text
-  else
-    MainDM.ibTelephonesQ.ParamByName( 'TELEPHONE' ).Value := NULL;
-  MainDM.ibTelephonesQ.Open();
+  if ( InputStage < isNothing )then
+  begin
+    MainDM.ibTelephonesQ.Close();
+    if ( editTelephone.Text <> '' ) then
+      MainDM.ibTelephonesQ.ParamByName( 'TELEPHONE' ).AsString :=
+        editTelephone.Text
+    else
+      MainDM.ibTelephonesQ.ParamByName( 'TELEPHONE' ).Value := NULL;
+    MainDM.ibTelephonesQ.Open();
+    if ( not MainDM.ibTelephonesQ.IsEmpty and ( InputStage < isGridOnly ) ) then
+    begin
+      TextLength := Length( editTelephone.Text );
+      InputStage := isNothing;
+      editTelephone.Text :=
+        MainDM.ibTelephonesQ.FieldByName( 'TELEPHONE' ).AsString;
+      editTelephone.SelStart := TextLength;
+      editTelephone.SelLength := Length( editTelephone.Text );
+    end;
+  end;
+  InputStage := isNormal;
 end;
 
 procedure TInputTelephonesForm.editTelephoneKeyPress(Sender: TObject;
@@ -92,6 +112,22 @@ procedure TInputTelephonesForm.dbgTelephonesKeyPress(Sender: TObject;
 begin
   if ( Key = Char( VK_RETURN ) ) then
     dbgTelephones.OnDblClick( dbgTelephones );
+end;
+
+procedure TInputTelephonesForm.FormKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if editTelephone.Focused() then
+  begin
+    if ( Key = VK_BACK ) then
+    begin
+      editTelephone.SelStart := editTelephone.SelStart - 1;
+      editTelephone.SelLength := Length( editTelephone.Text );
+      InputStage := isGridOnly;
+    end else
+    if ( Key = VK_DELETE ) then
+      InputStage := isGridOnly;
+  end;
 end;
 
 procedure TInputTelephonesForm.FormKeyPress(Sender: TObject; var Key: Char);
