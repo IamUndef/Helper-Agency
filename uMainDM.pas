@@ -13,6 +13,8 @@ type
     ibCheckTelephonesSQL: TIBSQL;
     ibTelephonesQ: TIBQuery;
     dsTelephones: TDataSource;
+    ibStreetsQ: TIBQuery;
+    dsStreets: TDataSource;
   private
     { Private declarations }
   public

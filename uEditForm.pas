@@ -7,7 +7,7 @@ uses
   System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
   Vcl.ActnList, Vcl.ActnMan, Vcl.ExtCtrls, Vcl.ImgList, Vcl.ToolWin,
   Vcl.ActnCtrls, Vcl.StdCtrls, Vcl.StdStyleActnCtrls, Vcl.ComCtrls, Vcl.Buttons,
-  PngSpeedButton, PngImageList, uInputTelephonesForm;
+  PngSpeedButton, PngImageList, uInputStreetsForm, uInputTelephonesForm;
 
 type
   TEditForm = class(TForm)
@@ -45,8 +45,12 @@ type
     procedure lbTelephonesDrawItem(Control: TWinControl; Index: Integer;
       Rect: TRect; State: TOwnerDrawState);
     procedure lbTelephonesKeyPress(Sender: TObject; var Key: Char);
+    procedure editStreetEnter(Sender: TObject);
+    procedure editStreetExit(Sender: TObject);
+    procedure editStreetKeyPress(Sender: TObject; var Key: Char);
   private
     { Private declarations }
+    InputStreetsForm: TInputStreetsForm;
     InputTelephonesForm: TInputTelephonesForm;
   public
     { Public declarations }
@@ -58,6 +62,8 @@ implementation
 
 procedure TEditForm.FormDestroy(Sender: TObject);
 begin
+  if Assigned( InputStreetsForm ) then
+    InputStreetsForm.Free();
   if Assigned( InputTelephonesForm ) then
     InputTelephonesForm.Free();
 end;
@@ -109,6 +115,27 @@ begin
             InputTelephonesForm.Telephone ) = -1 ) ) then
       lbTelephones.Items[lbTelephones.ItemIndex] :=
         InputTelephonesForm.Telephone;
+  end;
+end;
+
+procedure TEditForm.editStreetEnter(Sender: TObject);
+begin
+  editStreet.Color := clFuchsia;
+end;
+
+procedure TEditForm.editStreetExit(Sender: TObject);
+begin
+  editStreet.Color := clWhite;
+end;
+
+procedure TEditForm.editStreetKeyPress(Sender: TObject; var Key: Char);
+begin
+  if ( Key = Char( VK_RETURN ) ) then
+  begin
+    if not Assigned( InputStreetsForm ) then
+      InputStreetsForm := TInputStreetsForm.Create( Self );
+    if ( InputStreetsForm.ShowModal( editStreet.Text ) = mrOk ) then
+      editStreet.Text := InputStreetsForm.Street;
   end;
 end;
 

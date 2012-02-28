@@ -54,4 +54,28 @@ object MainDM: TMainDM
     Left = 216
     Top = 56
   end
+  object ibStreetsQ: TIBQuery
+    Database = ibDatabase
+    Transaction = ibTransaction
+    SQL.Strings = (
+      'SELECT'
+      '  STREETS.STREETS_ID,'
+      '  STREETS.STREET'
+      'FROM STREETS'
+      'WHERE STREETS.STREET STARTING WITH TRIM( :STREET )'
+      'ORDER BY STREETS.STREET')
+    Left = 288
+    Top = 8
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'STREET'
+        ParamType = ptUnknown
+      end>
+  end
+  object dsStreets: TDataSource
+    DataSet = ibStreetsQ
+    Left = 288
+    Top = 56
+  end
 end

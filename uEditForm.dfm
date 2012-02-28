@@ -126,8 +126,11 @@ object EditForm: TEditForm
         Width = 170
         Height = 21
         CharCase = ecUpperCase
-        MaxLength = 50
+        ReadOnly = True
         TabOrder = 1
+        OnEnter = editStreetEnter
+        OnExit = editStreetExit
+        OnKeyPress = editStreetKeyPress
       end
       object lbTelephones: TListBox
         Left = 193
