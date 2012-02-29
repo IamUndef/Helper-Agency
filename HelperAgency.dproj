@@ -86,6 +86,10 @@
 				<Form>MainForm</Form>
 				<FormType>dfm</FormType>
 			</DCCReference>
+			<DCCReference Include="uMainDM.pas">
+				<Form>MainDM</Form>
+				<DesignClass>TDataModule</DesignClass>
+			</DCCReference>
 			<DCCReference Include="uInputForm.pas">
 				<Form>InputForm</Form>
 			</DCCReference>
@@ -97,10 +101,6 @@
 			</DCCReference>
 			<DCCReference Include="uInputStreetsForm.pas">
 				<Form>InputStreetsForm</Form>
-			</DCCReference>
-			<DCCReference Include="uMainDM.pas">
-				<Form>MainDM</Form>
-				<DesignClass>TDataModule</DesignClass>
 			</DCCReference>
 			<DCCReference Include="uHandlerAds.pas"/>
 			<BuildConfiguration Include="Release">

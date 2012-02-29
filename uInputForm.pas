@@ -69,7 +69,7 @@ implementation
 
 {$R *.dfm}
 
-uses uMainDM, uEditForm;
+uses Data.DB, uMainDM, uEditForm;
 
 procedure TInputForm.FormCreate(Sender: TObject);
 begin
@@ -95,7 +95,132 @@ begin
 end;
 
 procedure TInputForm.aOkExecute(Sender: TObject);
+var
+  Ad: THandlerAds.TAd;
+
+procedure InsertNoneAndOnwerAds();
+var
+  AdIndex,
+  TelephoneIndex: Integer;
 begin
+  for AdIndex := 0 to HandlerAds.AdsCount - 1 do
+    if ( HandlerAds.Ads[AdIndex].Kind in [akNone, akOwner] ) then
+    begin
+      Ad := HandlerAds.Ads[AdIndex];
+      MainDM.ibStreetsDS.Close();
+      MainDM.ibStreetsDS.ParamByName( 'STREET' ).AsString := Ad.Street;
+      MainDM.ibStreetsDS.Open();
+      if MainDM.ibStreetsDS.IsEmpty then
+      begin
+        MainDM.ibStreetsDS.Insert();
+        try
+          MainDM.ibStreetsDS.FieldByName( 'STREET' ).AsString := Ad.Street;
+          MainDM.ibStreetsDS.Post();
+        except
+          MainDM.ibStreetsDS.Cancel();
+          raise;
+        end;
+      end;
+      MainDM.ibAdsDS.Open();
+      MainDM.ibAdsDS.Insert();
+      try
+        MainDM.ibAdsDS.FieldByName( 'STREETS_ID' ).AsInteger :=
+          MainDM.ibStreetsDS.FieldByName( 'STREETS_ID' ).AsInteger;
+        MainDM.ibAdsDS.FieldByName( 'ADDDATE' ).AsDateTime := 0;
+        MainDM.ibAdsDS.FieldByName( 'ROOMSCOUNT' ).AsInteger := Ad.RoomsCount;
+        MainDM.ibAdsDS.FieldByName( 'TEXT' ).AsString := Ad.Text;
+        MainDM.ibAdsDS.Post();
+      except
+        MainDM.ibAdsDS.Cancel();
+        raise;
+      end;
+      for TelephoneIndex := 0 to Ad.TelephonesCount - 1 do
+      begin
+        MainDM.ibTelephonesDS.Close();
+        MainDM.ibTelephonesDS.ParamByName( 'TELEPHONE' ).AsString :=
+          Ad.Telephones[TelephoneIndex];
+        MainDM.ibTelephonesDS.Open();
+        try
+          if not MainDM.ibTelephonesDS.IsEmpty then
+            MainDM.ibTelephonesDS.Edit()
+          else
+          begin
+            MainDM.ibTelephonesDS.Insert();
+            MainDM.ibTelephonesDS.FieldByName( 'TELEPHONE' ).AsString :=
+              Ad.Telephones[TelephoneIndex];
+          end;
+          MainDM.ibTelephonesDS.FieldByName( 'KIND' ).AsInteger :=
+            Integer( Ad.Kind );
+          MainDM.ibTelephonesDS.Post();
+        except
+          if ( MainDM.ibTelephonesDS.State in [dsInsert, dsEdit] ) then
+            MainDM.ibTelephonesDS.Cancel();
+          raise;
+        end;
+        MainDM.ibInsertAdsTelephonesSQL.Close();
+        MainDM.ibInsertAdsTelephonesSQL.ParamByName( 'ADS_ID' ).AsInteger :=
+          MainDM.ibAdsDS.FieldByName( 'ADS_ID' ).AsInteger;
+        MainDM.ibInsertAdsTelephonesSQL.ParamByName( 'TELEPHONES_ID' ).AsInteger :=
+          MainDM.ibTelephonesDS.FieldByName( 'TELEPHONES_ID' ).AsInteger;
+        MainDM.ibInsertAdsTelephonesSQL.ExecQuery();
+      end;
+    end;
+end;
+
+procedure InsertAgencyTelephones();
+var
+  AdIndex,
+  TelephoneIndex: Integer;
+begin
+  for AdIndex := 0 to HandlerAds.AdsCount - 1 do
+    if ( HandlerAds.Ads[AdIndex].Kind = akAgency ) then
+    begin
+      Ad := HandlerAds.Ads[AdIndex];
+      for TelephoneIndex := 0 to Ad.TelephonesCount - 1 do
+      begin
+        MainDM.ibTelephonesDS.Close();
+        MainDM.ibTelephonesDS.ParamByName( 'TELEPHONE' ).AsString :=
+          Ad.Telephones[TelephoneIndex];
+        MainDM.ibTelephonesDS.Open();
+        try
+          if not MainDM.ibTelephonesDS.IsEmpty then
+            MainDM.ibTelephonesDS.Edit()
+          else
+          begin
+            MainDM.ibTelephonesDS.Insert();
+            MainDM.ibTelephonesDS.FieldByName( 'TELEPHONE' ).AsString :=
+              Ad.Telephones[TelephoneIndex];
+          end;
+          MainDM.ibTelephonesDS.FieldByName( 'KIND' ).AsInteger :=
+            Integer( akAgency );
+          MainDM.ibTelephonesDS.Post();
+        except
+          if ( MainDM.ibTelephonesDS.State in [dsInsert, dsEdit] ) then
+            MainDM.ibTelephonesDS.Cancel();
+          raise;
+        end;
+      end;
+    end;
+end;
+
+begin
+  if MainDM.ibTransaction.InTransaction then
+    MainDM.ibTransaction.Commit();
+  MainDM.ibTransaction.StartTransaction();
+  try
+    try
+      InsertNoneAndOnwerAds();
+      InsertAgencyTelephones();
+      MainDM.ibTransaction.Commit();
+    except
+      MainDM.ibTransaction.Rollback();
+    end;
+  finally
+    MainDM.ibTelephonesDS.Close();
+    MainDM.ibStreetsDS.Close();
+    MainDM.ibAdsDS.Close();
+    MainDM.ibInsertAdsTelephonesSQL.Close();
+  end;
   ModalResult := mrOk;
 end;
 
@@ -275,7 +400,7 @@ begin
         Node := NodeEmularator.Current
       else
         vstAdsList.Selected[NodeEmularator.Current] := false;
-    EditForm := TEditForm.Create( NIL );
+    EditForm := TEditForm.Create( Self );
     try
       if ( EditForm.ShowModal(
           THandlerAds.TAd( vstAdsList.GetNodeData( Node )^ ) ) = mrOk ) then
@@ -362,13 +487,18 @@ begin
     Result := akNone;
     for TelephoneIndex := 0 to Telephones.Count - 1 do
       try
+        MainDM.ibCheckTelephonesSQL.Close();
         MainDM.ibCheckTelephonesSQL.ParamByName( 'TELEPHONE' ).AsString :=
           Telephones[TelephoneIndex];
-        MainDM.ibCheckTelephonesSQL.Close();
         MainDM.ibCheckTelephonesSQL.ExecQuery();
         if not MainDM.ibCheckTelephonesSQL.Eof then
-          Exit( THandlerAds.TAdKind(
-            MainDM.ibCheckTelephonesSQL.FieldByName( 'KIND' ).AsInteger ) )
+          case THandlerAds.TAdKind(
+              MainDM.ibCheckTelephonesSQL.FieldByName( 'KIND' ).AsInteger ) of
+            akOwner:
+              Result := akOwner;
+            akAgency:
+              Exit( akAgency );
+          end;
       finally
         MainDM.ibCheckTelephonesSQL.Close();
       end;

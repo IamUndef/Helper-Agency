@@ -15,6 +15,10 @@ type
     dsTelephones: TDataSource;
     ibStreetsQ: TIBQuery;
     dsStreets: TDataSource;
+    ibInsertAdsTelephonesSQL: TIBSQL;
+    ibTelephonesDS: TIBDataSet;
+    ibStreetsDS: TIBDataSet;
+    ibAdsDS: TIBDataSet;
   private
     { Private declarations }
   public
