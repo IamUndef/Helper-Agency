@@ -31,7 +31,6 @@ object InputStreetsForm: TInputStreetsForm
     TabOrder = 0
     OnChange = editStreetChange
     OnKeyPress = editStreetKeyPress
-    ExplicitWidth = 208
   end
   object dbgStreets: TDBGrid
     AlignWithMargins = True

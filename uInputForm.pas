@@ -151,14 +151,18 @@ begin
       MB_ICONWARNING or MB_YESNO or MB_DEFBUTTON2 ) ) ) then
   begin
     NodeEmularator := vstAdsList.CheckedNodes().GetEnumerator();
-    while NodeEmularator.MoveNext() do
-    begin
-      vstAdsList.CheckState[NodeEmularator.Current] := csUncheckedNormal;
-      HandlerAds.DeleteAd( THandlerAds.TAd( vstAdsList.GetNodeData(
-        NodeEmularator.Current )^ ) );
-      vstAdsList.DeleteNode( NodeEmularator.Current );
+    vstAdsList.BeginUpdate();
+    try
+      while NodeEmularator.MoveNext() do
+      begin
+        vstAdsList.CheckState[NodeEmularator.Current] := csUncheckedNormal;
+        HandlerAds.DeleteAd( THandlerAds.TAd( vstAdsList.GetNodeData(
+          NodeEmularator.Current )^ ) );
+        vstAdsList.DeleteNode( NodeEmularator.Current );
+      end;
+    finally
+      vstAdsList.EndUpdate();
     end;
-    vstAdsList.Invalidate();
   end;
 end;
 
@@ -273,7 +277,10 @@ begin
         vstAdsList.Selected[NodeEmularator.Current] := false;
     EditForm := TEditForm.Create( NIL );
     try
-      EditForm.ShowModal( {THandlerAds.TAd( vstAdsList.GetNodeData( Node )^} );
+      if ( EditForm.ShowModal(
+          THandlerAds.TAd( vstAdsList.GetNodeData( Node )^ ) ) = mrOk ) then
+        vstAdsList.SortTree( vstAdsList.Header.SortColumn,
+          vstAdsList.Header.SortDirection );
     finally
       EditForm.Free();
     end;
@@ -376,10 +383,13 @@ begin
   end else
   begin
     vstAdsList.BeginUpdate();
-    for AdIndex := 0 to HandlerAds.AdsCount - 1 do
-      vstAdsList.AddChild( NIL,
-        Pointer( HandlerAds.Ads[AdIndex] ) ).CheckType := ctCheckBox;
-    vstAdsList.EndUpdate();
+    try
+      for AdIndex := 0 to HandlerAds.AdsCount - 1 do
+        vstAdsList.AddChild( NIL,
+          Pointer( HandlerAds.Ads[AdIndex] ) ).CheckType := ctCheckBox;
+    finally
+      vstAdsList.EndUpdate();
+    end;
     Result := inherited ShowModal();
   end;
 end;

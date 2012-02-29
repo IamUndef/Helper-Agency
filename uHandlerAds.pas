@@ -37,7 +37,7 @@ type
             destructor Destroy(); override;
 
             procedure AddTelephone( const Telephone: String );
-            procedure DelTelephone( Index: Integer );
+            procedure DeleteTelephone( Index: Integer );
 
             property Text: String read Text_;
             property Kind: TAdKind read Kind_ write Kind_;
@@ -190,7 +190,7 @@ begin
     Telephones_.Add( Trim( Telephone ) );
 end;
 
-procedure THandlerAds.TAd.DelTelephone( Index: Integer );
+procedure THandlerAds.TAd.DeleteTelephone( Index: Integer );
 begin
   Assert( ( Index >= 0 ) and ( Index < Telephones_.Count ) );
   if ( ( Index >= 0 ) and ( Index < Telephones_.Count ) ) then

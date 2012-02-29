@@ -13,9 +13,9 @@ type
     dbgTelephones: TDBGrid;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure editTelephoneChange(Sender: TObject);
+    procedure editTelephoneKeyPress(Sender: TObject; var Key: Char);
     procedure dbgTelephonesDblClick(Sender: TObject);
     procedure dbgTelephonesKeyPress(Sender: TObject; var Key: Char);
-    procedure editTelephoneKeyPress(Sender: TObject; var Key: Char);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FormKeyPress(Sender: TObject; var Key: Char);
     procedure dbgTelephonesDrawColumnCell(Sender: TObject; const Rect: TRect;

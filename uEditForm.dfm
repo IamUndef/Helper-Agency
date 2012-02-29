@@ -128,6 +128,7 @@ object EditForm: TEditForm
         CharCase = ecUpperCase
         ReadOnly = True
         TabOrder = 1
+        OnDblClick = editStreetDblClick
         OnEnter = editStreetEnter
         OnExit = editStreetExit
         OnKeyPress = editStreetKeyPress

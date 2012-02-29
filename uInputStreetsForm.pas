@@ -13,9 +13,9 @@ type
     dbgStreets: TDBGrid;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure editStreetChange(Sender: TObject);
+    procedure editStreetKeyPress(Sender: TObject; var Key: Char);
     procedure dbgStreetsDblClick(Sender: TObject);
     procedure dbgStreetsKeyPress(Sender: TObject; var Key: Char);
-    procedure editStreetKeyPress(Sender: TObject; var Key: Char);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FormKeyPress(Sender: TObject; var Key: Char);
     procedure dbgStreetsDrawColumnCell(Sender: TObject; const Rect: TRect;
@@ -117,6 +117,12 @@ begin
   end;
 end;
 
+procedure TInputStreetsForm.FormKeyPress(Sender: TObject; var Key: Char);
+begin
+  if ( Key = Char( VK_ESCAPE ) ) then
+    Close();
+end;
+
 procedure TInputStreetsForm.dbgStreetsDrawColumnCell(Sender: TObject;
   const Rect: TRect; DataCol: Integer; Column: TColumn; State: TGridDrawState);
 const
@@ -137,12 +143,6 @@ begin
     CellRect.Right := CellRect.Right - GetSystemMetrics( SM_CXVSCROLL );
   DrawText( dbgStreets.Canvas.Handle, CellText, Length( CellText ), CellRect,
     DT_END_ELLIPSIS or DT_SINGLELINE or DT_VCENTER );
-end;
-
-procedure TInputStreetsForm.FormKeyPress(Sender: TObject; var Key: Char);
-begin
-  if ( Key = Char( VK_ESCAPE ) ) then
-    Close();
 end;
 
 function TInputStreetsForm.ShowModal( Street: String ): TModalResult;

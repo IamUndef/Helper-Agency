@@ -7,7 +7,8 @@ uses
   System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
   Vcl.ActnList, Vcl.ActnMan, Vcl.ExtCtrls, Vcl.ImgList, Vcl.ToolWin,
   Vcl.ActnCtrls, Vcl.StdCtrls, Vcl.StdStyleActnCtrls, Vcl.ComCtrls, Vcl.Buttons,
-  PngSpeedButton, PngImageList, uInputStreetsForm, uInputTelephonesForm;
+  PngSpeedButton, PngImageList, uInputStreetsForm, uInputTelephonesForm,
+  uHandlerAds;
 
 type
   TEditForm = class(TForm)
@@ -44,6 +45,7 @@ type
     procedure aChangeExecute(Sender: TObject);
     procedure editStreetEnter(Sender: TObject);
     procedure editStreetExit(Sender: TObject);
+    procedure editStreetDblClick(Sender: TObject);
     procedure editStreetKeyPress(Sender: TObject; var Key: Char);
     procedure lbTelephonesDblClick(Sender: TObject);
     procedure lbTelephonesKeyPress(Sender: TObject; var Key: Char);
@@ -51,15 +53,20 @@ type
       Rect: TRect; State: TOwnerDrawState);
   private
     { Private declarations }
+    Ad_: THandlerAds.TAd;
     InputStreetsForm: TInputStreetsForm;
     InputTelephonesForm: TInputTelephonesForm;
   public
     { Public declarations }
+
+    function ShowModal( Ad: THandlerAds.TAd ): TModalResult; reintroduce;
   end;
 
 implementation
 
 {$R *.dfm}
+
+uses System.Math;
 
 procedure TEditForm.FormDestroy(Sender: TObject);
 begin
@@ -70,13 +77,27 @@ begin
 end;
 
 procedure TEditForm.aOkExecute(Sender: TObject);
+var
+  TelephoneIndex: Integer;
 begin
-//
+  Ad_.RoomsCount := StrToInt( editRoomsCount.Text );
+  Ad_.Street := editStreet.Text;
+  for TelephoneIndex := 0 to
+      Max( Ad_.TelephonesCount, lbTelephones.Count ) - 1 do
+    if ( TelephoneIndex < Min( Ad_.TelephonesCount, lbTelephones.Count ) ) then
+      Ad_.Telephones[TelephoneIndex] := lbTelephones.Items[TelephoneIndex]
+    else
+    if ( Ad_.TelephonesCount < lbTelephones.Count ) then
+      Ad_.AddTelephone( lbTelephones.Items[TelephoneIndex] )
+    else
+    if ( Ad_.TelephonesCount > lbTelephones.Count ) then
+      Ad_.DeleteTelephone( Ad_.TelephonesCount - 1 );
+  ModalResult := mrOk;
 end;
 
 procedure TEditForm.aCancelExecute(Sender: TObject);
 begin
-//
+  ModalResult := mrCancel;
 end;
 
 procedure TEditForm.aAddExecute(Sender: TObject);
@@ -95,13 +116,16 @@ end;
 
 procedure TEditForm.aDelExecute(Sender: TObject);
 begin
-  if ( lbTelephones.Count = 1 ) then
-    MessageBox( Handle, 'Список телефон не должен быть пустым!',
-      'Helper Agency', MB_ICONINFORMATION )
-  else if ( ( lbTelephones.ItemIndex <> -1 ) and ( IDYES = MessageBox( Handle,
-      'Вы действительно хотите удалить выбранный телефон?', 'Helper Agency',
-      MB_ICONWARNING or MB_YESNO or MB_DEFBUTTON2 ) ) ) then
-    lbTelephones.Items.Delete( lbTelephones.ItemIndex );
+  if lbTelephones.Focused then
+  begin
+    if ( lbTelephones.Count = 1 ) then
+      MessageBox( Handle, 'Список телефон не должен быть пустым!',
+        'Helper Agency', MB_ICONINFORMATION )
+    else if ( ( lbTelephones.ItemIndex <> -1 ) and ( IDYES = MessageBox( Handle,
+        'Вы действительно хотите удалить выбранный телефон?', 'Helper Agency',
+        MB_ICONWARNING or MB_YESNO or MB_DEFBUTTON2 ) ) ) then
+      lbTelephones.Items.Delete( lbTelephones.ItemIndex );
+  end;
 end;
 
 procedure TEditForm.aChangeExecute(Sender: TObject);
@@ -129,15 +153,18 @@ begin
   editStreet.Color := clWhite;
 end;
 
+procedure TEditForm.editStreetDblClick(Sender: TObject);
+begin
+  if not Assigned( InputStreetsForm ) then
+    InputStreetsForm := TInputStreetsForm.Create( Self );
+  if ( InputStreetsForm.ShowModal( editStreet.Text ) = mrOk ) then
+    editStreet.Text := InputStreetsForm.Street;
+end;
+
 procedure TEditForm.editStreetKeyPress(Sender: TObject; var Key: Char);
 begin
   if ( Key = Char( VK_RETURN ) ) then
-  begin
-    if not Assigned( InputStreetsForm ) then
-      InputStreetsForm := TInputStreetsForm.Create( Self );
-    if ( InputStreetsForm.ShowModal( editStreet.Text ) = mrOk ) then
-      editStreet.Text := InputStreetsForm.Street;
-  end;
+    editStreet.OnDblClick( editStreet );
 end;
 
 procedure TEditForm.lbTelephonesDblClick(Sender: TObject);
@@ -158,6 +185,19 @@ begin
   DrawText( lbTelephones.Canvas.Handle, lbTelephones.Items[Index],
     Length( lbTelephones.Items[Index] ), Rect, DT_END_ELLIPSIS or DT_RIGHT or
     DT_SINGLELINE or DT_VCENTER );
+end;
+
+function TEditForm.ShowModal( Ad: THandlerAds.TAd ): TModalResult;
+var
+  TelephoneIndex: Integer;
+begin
+  Ad_ := Ad;
+  mText.Text := Ad_.Text;
+  editRoomsCount.Text := IntToStr( Ad_.RoomsCount );
+  editStreet.Text := Ad_.Street;
+  for TelephoneIndex := 0 to Ad_.TelephonesCount - 1 do
+    lbTelephones.Items.Add( Ad_.Telephones[TelephoneIndex] );
+  Result := inherited ShowModal();
 end;
 
 end.
