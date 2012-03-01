@@ -38,6 +38,7 @@ type
 
             procedure AddTelephone( const Telephone: String );
             procedure DeleteTelephone( Index: Integer );
+            function IsAdTelephone( const Telephone: String ): Boolean;
 
             property Text: String read Text_;
             property Kind: TAdKind read Kind_ write Kind_;
@@ -195,6 +196,16 @@ begin
   Assert( ( Index >= 0 ) and ( Index < Telephones_.Count ) );
   if ( ( Index >= 0 ) and ( Index < Telephones_.Count ) ) then
     Telephones_.Delete( Index );
+end;
+
+function THandlerAds.TAd.IsAdTelephone( const Telephone: String ): Boolean;
+var
+  TelephoneIndex: Integer;
+begin
+  Result := false;
+  for TelephoneIndex := 0 to Telephones_.Count - 1 do
+    if ( Telephones_[TelephoneIndex] = Telephone ) then
+      Exit( true );
 end;
 
 procedure THandlerAds.TAd.Init( const AdText: String );

@@ -5,13 +5,13 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  Vcl.StdCtrls, Vcl.Grids, Vcl.DBGrids, Data.DB;
+  Vcl.StdCtrls, Vcl.Grids, Vcl.DBGrids, Data.DB, uHandlerAds;
 
 type
   TInputTelephonesForm = class(TForm)
     editTelephone: TEdit;
     dbgTelephones: TDBGrid;
-    procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure editTelephoneChange(Sender: TObject);
     procedure editTelephoneKeyPress(Sender: TObject; var Key: Char);
     procedure dbgTelephonesDblClick(Sender: TObject);
@@ -25,28 +25,41 @@ type
       TInputStages = ( isNormal, isGridOnly, isNothing );
   private
     { Private declarations }
-    InputStage: TInputStages;
     Telephone_: String;
+    Kind_: THandlerAds.TAdKind;
+    InputStage: TInputStages;
   public
     { Public declarations }
-    function ShowModal( Telephone: String ): TModalResult; reintroduce;
+    function ShowModal( Telephone: String;
+      Kind: THandlerAds.TAdKind ): TModalResult; reintroduce;
 
     property Telephone: String read Telephone_;
+    property Kind: THandlerAds.TAdKind read Kind_;
   end;
-
 implementation
 
 {$R *.dfm}
 
-uses uMainDM, uHandlerAds;
+uses uMainDM;
 
-procedure TInputTelephonesForm.FormClose(Sender: TObject;
-  var Action: TCloseAction);
+procedure TInputTelephonesForm.FormCloseQuery(Sender: TObject;
+  var CanClose: Boolean);
+var
+  TelephoneInt: Int64;
 begin
   editTelephone.SetFocus();
-  if ( ModalResult <> mrOk ) then
-    ModalResult := mrCancel;
-  MainDM.ibTelephonesQ.Close();
+  if ( ( ModalResult = mrOk ) and
+      not TryStrToInt64( Telephone_, TelephoneInt ) ) then
+  begin
+    CanClose := false;
+    MessageBox( Handle, 'Неверное значение номера телефона!', 'Helper Agency',
+      MB_ICONERROR or MB_OK );
+  end else
+  begin
+    if ( ModalResult <> mrOk ) then
+      ModalResult := mrCancel;
+    MainDM.ibTelephonesQ.Close();
+  end;
 end;
 
 procedure TInputTelephonesForm.editTelephoneChange(Sender: TObject);
@@ -82,6 +95,12 @@ begin
       ( Length( editTelephone.Text ) > 4 ) ) then
   begin
     Telephone_ := editTelephone.Text;
+    if ( Telephone_ = MainDM.ibTelephonesQ.FieldByName(
+        'TELEPHONE' ).AsString ) then
+      Kind_ := THandlerAds.TAdKind(
+        MainDM.ibTelephonesQ.FieldByName( 'KIND' ).AsInteger )
+    else
+      Kind_ := akNone;
     ModalResult := mrOk
   end else
   if ( ( editTelephone.SelStart = 0 ) and ( Key <> Char( VK_BACK ) ) ) then
@@ -104,6 +123,8 @@ begin
   if not MainDM.ibTelephonesQ.IsEmpty() then
   begin
     Telephone_ := MainDM.ibTelephonesQ.FieldByName( 'TELEPHONE' ).AsString;
+    Kind_ := THandlerAds.TAdKind(
+      MainDM.ibTelephonesQ.FieldByName( 'KIND' ).AsInteger );
     ModalResult := mrOk;
   end;
 end;
@@ -163,10 +184,12 @@ begin
     DT_END_ELLIPSIS or DT_SINGLELINE or DT_VCENTER );
 end;
 
-function TInputTelephonesForm.ShowModal( Telephone: String ): TModalResult;
+function TInputTelephonesForm.ShowModal( Telephone: String;
+  Kind: THandlerAds.TAdKind ): TModalResult;
 begin
   ModalResult := mrNone;
   Telephone_ := Telephone;
+  Kind_ := Kind;
   editTelephone.Text := Telephone;
   editTelephone.OnChange( editTelephone );
   Result := inherited ShowModal();

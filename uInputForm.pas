@@ -63,6 +63,7 @@ type
   public
     { Public declarations }
     function ShowModal( const FileName: String ): TModalResult; reintroduce;
+    procedure SyncAdKinds( Ad: THandlerAds.TAd );
   end;
 
 implementation
@@ -212,8 +213,11 @@ begin
       InsertNoneAndOnwerAds();
       InsertAgencyTelephones();
       MainDM.ibTransaction.Commit();
+      ModalResult := mrOk;
     except
       MainDM.ibTransaction.Rollback();
+      MessageBox( Handle, 'Не удалось сохранить данные!', 'Helper Agency',
+        MB_ICONERROR or MB_OK );
     end;
   finally
     MainDM.ibTelephonesDS.Close();
@@ -221,7 +225,6 @@ begin
     MainDM.ibAdsDS.Close();
     MainDM.ibInsertAdsTelephonesSQL.Close();
   end;
-  ModalResult := mrOk;
 end;
 
 procedure TInputForm.aCancelExecute(Sender: TObject);
@@ -239,11 +242,8 @@ begin
     vstAdsList.CheckState[NodeEmularator.Current] := csUncheckedNormal;
     THandlerAds.TAd( vstAdsList.GetNodeData(
       NodeEmularator.Current )^ ).Kind := akOwner;
-    if not cbOwner.Checked then
-    begin
-      vstAdsList.FullyVisible[NodeEmularator.Current] := false;
-      vstAdsList.Selected[NodeEmularator.Current] := false;
-    end;
+    SyncAdKinds( THandlerAds.TAd( vstAdsList.GetNodeData(
+      NodeEmularator.Current )^ ) );
   end;
   vstAdsList.Invalidate();
 end;
@@ -258,11 +258,8 @@ begin
     vstAdsList.CheckState[NodeEmularator.Current] := csUncheckedNormal;
     THandlerAds.TAd( vstAdsList.GetNodeData(
       NodeEmularator.Current )^ ).Kind := akAgency;
-    if not cbAgency.Checked then
-    begin
-      vstAdsList.FullyVisible[NodeEmularator.Current] := false;
-      vstAdsList.Selected[NodeEmularator.Current] := false;
-    end;
+    SyncAdKinds( THandlerAds.TAd( vstAdsList.GetNodeData(
+      NodeEmularator.Current )^ ) );
   end;
   vstAdsList.Invalidate();
 end;
@@ -297,23 +294,39 @@ procedure TInputForm.vstAdsListGetText(Sender: TBaseVirtualTree;
 var
   Ad: THandlerAds.TAd;
   TelephoneIndex: Integer;
+  KindChecked: Boolean;
 begin
-  CellText := '';
   Ad := THandlerAds.TAd( vstAdsList.GetNodeData( Node )^ );
-  case TColumnType( Column ) of
-    ctRoomsCount:
-      CellText := IntToStr( Ad.RoomsCount );
-    ctStreet:
-      CellText := Ad.Street;
-    ctTelephones:
-      for TelephoneIndex := 0 to Ad.TelephonesCount - 1 do
-      begin
-        if ( CellText <> '' ) then
-          CellText := CellText + ', ';
-        CellText := CellText + Ad.Telephones[TelephoneIndex];
-      end;
-    ctAdText:
-      CellText := Ad.Text;
+  KindChecked := true;
+  case Ad.Kind of
+    akNone: KindChecked := cbNone.Checked;
+    akOwner: KindChecked := cbOwner.Checked;
+    akAgency: KindChecked := cbAgency.Checked;
+  end;
+  if not KindChecked then
+  begin
+    vstAdsList.CheckState[Node] := csUncheckedNormal;
+    vstAdsList.FullyVisible[Node] := false;
+    vstAdsList.Selected[Node] := false;
+  end;
+  if vstAdsList.FullyVisible[Node] then
+  begin
+    CellText := '';
+    case TColumnType( Column ) of
+      ctRoomsCount:
+        CellText := IntToStr( Ad.RoomsCount );
+      ctStreet:
+        CellText := Ad.Street;
+      ctTelephones:
+        for TelephoneIndex := 0 to Ad.TelephonesCount - 1 do
+        begin
+          if ( CellText <> '' ) then
+            CellText := CellText + ', ';
+          CellText := CellText + Ad.Telephones[TelephoneIndex];
+        end;
+      ctAdText:
+        CellText := Ad.Text;
+    end;
   end;
 end;
 
@@ -404,8 +417,11 @@ begin
     try
       if ( EditForm.ShowModal(
           THandlerAds.TAd( vstAdsList.GetNodeData( Node )^ ) ) = mrOk ) then
+      begin
+        SyncAdKinds( THandlerAds.TAd( vstAdsList.GetNodeData( Node )^ ) );
         vstAdsList.SortTree( vstAdsList.Header.SortColumn,
           vstAdsList.Header.SortDirection );
+      end;
     finally
       EditForm.Free();
     end;
@@ -522,6 +538,34 @@ begin
     end;
     Result := inherited ShowModal();
   end;
+end;
+
+procedure TInputForm.SyncAdKinds( Ad: THandlerAds.TAd );
+var
+  AdSync: THandlerAds.TAd;
+  AdIndex,
+  TelephoneIndex: Integer;
+begin
+  for AdIndex := 0 to HandlerAds.AdsCount - 1 do
+    if ( Ad.Kind <> HandlerAds.Ads[AdIndex].Kind ) then
+    begin
+      AdSync := HandlerAds.Ads[AdIndex];
+      for TelephoneIndex := 0 to Ad.TelephonesCount - 1 do
+        if AdSync.IsAdTelephone( Ad.Telephones[TelephoneIndex] ) then
+        begin
+          if ( ( Ad.Kind = akNone ) and ( Ad.Kind < AdSync.Kind ) ) then
+          begin
+            Ad.Kind := AdSync.Kind;
+            Exit();
+          end else
+          begin
+            AdSync.Kind := Ad.Kind;
+            if ( AdSync.TelephonesCount > 1 ) then
+              SyncAdKinds( AdSync );
+            Break;
+          end;
+        end;
+    end;
 end;
 
 end.

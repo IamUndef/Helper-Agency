@@ -58,7 +58,6 @@ type
     InputTelephonesForm: TInputTelephonesForm;
   public
     { Public declarations }
-
     function ShowModal( Ad: THandlerAds.TAd ): TModalResult; reintroduce;
   end;
 
@@ -78,20 +77,33 @@ end;
 
 procedure TEditForm.aOkExecute(Sender: TObject);
 var
+  AdKind: THandlerAds.TAdKind;
   TelephoneIndex: Integer;
 begin
+  AdKind := akNone;
   Ad_.RoomsCount := StrToInt( editRoomsCount.Text );
   Ad_.Street := editStreet.Text;
   for TelephoneIndex := 0 to
       Max( Ad_.TelephonesCount, lbTelephones.Count ) - 1 do
     if ( TelephoneIndex < Min( Ad_.TelephonesCount, lbTelephones.Count ) ) then
-      Ad_.Telephones[TelephoneIndex] := lbTelephones.Items[TelephoneIndex]
-    else
+    begin
+      Ad_.Telephones[TelephoneIndex] := lbTelephones.Items[TelephoneIndex];
+      if ( AdKind < THandlerAds.TAdKind(
+          lbTelephones.Items.Objects[TelephoneIndex] ) ) then
+        AdKind := THandlerAds.TAdKind(
+          lbTelephones.Items.Objects[TelephoneIndex] );
+    end else
     if ( Ad_.TelephonesCount < lbTelephones.Count ) then
-      Ad_.AddTelephone( lbTelephones.Items[TelephoneIndex] )
-    else
+    begin
+      Ad_.AddTelephone( lbTelephones.Items[TelephoneIndex] );
+      if ( AdKind < THandlerAds.TAdKind(
+          lbTelephones.Items.Objects[TelephoneIndex] ) ) then
+        AdKind := THandlerAds.TAdKind(
+          lbTelephones.Items.Objects[TelephoneIndex] );
+    end else
     if ( Ad_.TelephonesCount > lbTelephones.Count ) then
       Ad_.DeleteTelephone( Ad_.TelephonesCount - 1 );
+  Ad_.Kind := AdKind;
   ModalResult := mrOk;
 end;
 
@@ -104,12 +116,12 @@ procedure TEditForm.aAddExecute(Sender: TObject);
 begin
   if not Assigned( InputTelephonesForm ) then
     InputTelephonesForm := TInputTelephonesForm.Create( Self );
-  if ( ( InputTelephonesForm.ShowModal( '' ) = mrOk ) and
+  if ( ( InputTelephonesForm.ShowModal( '', akNone ) = mrOk ) and
       ( lbTelephones.Items.IndexOf(
           InputTelephonesForm.Telephone ) = -1 ) ) then
   begin
-    lbTelephones.ItemIndex :=
-      lbTelephones.Items.Add( InputTelephonesForm.Telephone );
+    lbTelephones.ItemIndex := lbTelephones.Items.AddObject(
+      InputTelephonesForm.Telephone, TObject( InputTelephonesForm.Kind ) );
     lbTelephones.SetFocus();
   end;
 end;
@@ -135,11 +147,17 @@ begin
     if not Assigned( InputTelephonesForm ) then
       InputTelephonesForm := TInputTelephonesForm.Create( Self );
     if ( ( InputTelephonesForm.ShowModal(
-            lbTelephones.Items[lbTelephones.ItemIndex] ) = mrOk ) and
+            lbTelephones.Items[lbTelephones.ItemIndex],
+            THandlerAds.TAdKind(
+              lbTelephones.Items.Objects[lbTelephones.ItemIndex] ) ) = mrOk ) and
         ( lbTelephones.Items.IndexOf(
             InputTelephonesForm.Telephone ) = -1 ) ) then
+    begin
       lbTelephones.Items[lbTelephones.ItemIndex] :=
         InputTelephonesForm.Telephone;
+      lbTelephones.Items.Objects[lbTelephones.ItemIndex] :=
+        TObject( InputTelephonesForm.Kind );
+    end;
   end;
 end;
 
@@ -196,7 +214,8 @@ begin
   editRoomsCount.Text := IntToStr( Ad_.RoomsCount );
   editStreet.Text := Ad_.Street;
   for TelephoneIndex := 0 to Ad_.TelephonesCount - 1 do
-    lbTelephones.Items.Add( Ad_.Telephones[TelephoneIndex] );
+    lbTelephones.Items.AddObject( Ad_.Telephones[TelephoneIndex],
+      TObject( Ad_.Kind ) );
   Result := inherited ShowModal();
 end;
 

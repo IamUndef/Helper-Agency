@@ -14,7 +14,7 @@ object InputTelephonesForm: TInputTelephonesForm
   KeyPreview = True
   OldCreateOrder = False
   Position = poMainFormCenter
-  OnClose = FormClose
+  OnCloseQuery = FormCloseQuery
   OnKeyDown = FormKeyDown
   OnKeyPress = FormKeyPress
   PixelsPerInch = 96
