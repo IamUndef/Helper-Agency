@@ -13,7 +13,7 @@ object InputForm: TInputForm
   Font.Name = 'Tahoma'
   Font.Style = [fsBold]
   OldCreateOrder = False
-  Position = poDesktopCenter
+  Position = poMainFormCenter
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
   OnDestroy = FormDestroy
